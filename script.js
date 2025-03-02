@@ -7,6 +7,7 @@ fetch('https://coinatmradar.com/api/v2/atms?country=BR')
     .then(response => response.json())
     .then(data => {
         // Adicionar marcadores ao mapa
+        const markers = []; // Armazenar marcadores para pesquisa
         data.forEach(atm => {
             const lat = atm.lat;
             const lng = atm.lng;
@@ -17,6 +18,24 @@ fetch('https://coinatmradar.com/api/v2/atms?country=BR')
             }
             marker.bindPopup(popupContent);
             marker.on('click', () => showInfo(atm));
+            markers.push({ atm, marker }); // Armazenar ATM e marcador
+        });
+
+        // Adicionar evento de clique ao botão de busca
+        const searchInput = document.getElementById('searchInput');
+        searchInput.addEventListener('input', () => {
+            const searchTerm = searchInput.value.toLowerCase();
+            markers.forEach(item => {
+                const { atm, marker } = item;
+                const match = atm.name.toLowerCase().includes(searchTerm) ||
+                    atm.address.toLowerCase().includes(searchTerm) ||
+                    (atm.operator && atm.operator.toLowerCase().includes(searchTerm));
+                if (match) {
+                    marker.addTo(map); // Exibir marcador
+                } else {
+                    map.removeLayer(marker); // Ocultar marcador
+                }
+            });
         });
     })
     .catch(error => console.error('Erro ao obter dados da API:', error));
